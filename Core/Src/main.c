@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "led.h"
+#include "OLED.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -90,6 +91,9 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   LED_Init();
+  OLED_Init();
+  OLED_ShowString(0, 0, "LED: ON", 16);
+  OLED_UpdateScreen();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,7 +103,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    LED_Blink(500);
+    OLED_Clear();
+    OLED_ShowString(0, 0, "LED: ON ", 16); // 加个空格覆盖旧字符
+    OLED_UpdateScreen();
+    LED_On();
+    HAL_Delay(500);
+
+    OLED_Clear();
+    OLED_ShowString(0, 0, "LED: OFF", 16);
+    OLED_UpdateScreen();
+    LED_Off();
+    HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
