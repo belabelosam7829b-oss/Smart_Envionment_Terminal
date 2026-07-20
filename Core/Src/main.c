@@ -18,15 +18,17 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "i2c.h"
+#include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "led.h"
 #include "OLED.h"
-#include "tim.h"
 #include "dht11.h"
+#include "5516.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -93,12 +95,14 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_TIM2_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim2);
   LED_Init();
   OLED_Init();
   DHT11_Init();
-  OLED_ShowString(0, 0, "DHT11 Reading...", 16);
+  LightSensor_Init();
+  OLED_ShowString(0, 0, "System Starting...", 16);
   OLED_UpdateScreen();
   /* USER CODE END 2 */
 
@@ -110,34 +114,46 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     uint8_t temperature, humidity;
+    int light_percentage;
     char buf[20];
 
+    // 0. 先翻转 LED 状态，确保接下来的显示与实际状态一致
+    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+
+    // 1. 清除显存准备刷新
+    OLED_Clear();
+
+    // 2. 第一行：显示 LED 状态
+    if (HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin) == GPIO_PIN_RESET) {
+        OLED_ShowString(0, 0, "LED: ON ", 16);
+    } else {
+        OLED_ShowString(0, 0, "LED: OFF", 16);
+    }
+
+    // 3. 第二、三行：读取 DHT11
     if (DHT11_Read_Data(&temperature, &humidity) == 0)
     {
-        OLED_Clear();
-        // 第一行显示 LED 状态
-        if (HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin) == GPIO_PIN_RESET) {
-            OLED_ShowString(0, 0, "LED: ON ", 16);
-        } else {
-            OLED_ShowString(0, 0, "LED: OFF", 16);
-        }
-        
-        // 第二行和第三行显示温湿度
         sprintf(buf, "Temp: %d C", temperature);
         OLED_ShowString(0, 16, buf, 16);
         sprintf(buf, "Humi: %d %%", humidity);
         OLED_ShowString(0, 32, buf, 16);
-        OLED_UpdateScreen();
     }
     else
     {
-        OLED_Clear();
-        OLED_ShowString(0, 0, "DHT11 Error!", 16);
-        OLED_UpdateScreen();
+        OLED_ShowString(0, 16, "Temp: Error", 16);
+        OLED_ShowString(0, 32, "Humi: Error", 16);
     }
 
-    LED_Toggle();
-    HAL_Delay(2000); // DHT11 采样周期建议不小于 2s
+    // 4. 第四行：显示光照强度
+    light_percentage = LightSensor_GetPercentage();
+    sprintf(buf, "Light: %d %%", light_percentage);
+    OLED_ShowString(0, 48, buf, 16);
+
+    // 5. 统一刷新屏幕
+    OLED_UpdateScreen();
+
+    // 6. 延时 1 秒，使显示更稳定且易于观察
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }

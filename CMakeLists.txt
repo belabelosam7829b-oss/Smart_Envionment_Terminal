@@ -49,6 +49,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/led.c
     Core/Src/OLED.c
     Core/Src/dht11.c
+    Core/Src/5516.c
+    Core/Src/adc.c
 )
 
 # Add include paths
