@@ -25,6 +25,9 @@
 /* USER CODE BEGIN Includes */
 #include "led.h"
 #include "OLED.h"
+#include "tim.h"
+#include "dht11.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -89,10 +92,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start(&htim2);
   LED_Init();
   OLED_Init();
-  OLED_ShowString(0, 0, "LED: ON", 16);
+  DHT11_Init();
+  OLED_ShowString(0, 0, "DHT11 Reading...", 16);
   OLED_UpdateScreen();
   /* USER CODE END 2 */
 
@@ -103,17 +109,35 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    OLED_Clear();
-    OLED_ShowString(0, 0, "LED: ON ", 16); // 加个空格覆盖旧字符
-    OLED_UpdateScreen();
-    LED_On();
-    HAL_Delay(500);
+    uint8_t temperature, humidity;
+    char buf[20];
 
-    OLED_Clear();
-    OLED_ShowString(0, 0, "LED: OFF", 16);
-    OLED_UpdateScreen();
-    LED_Off();
-    HAL_Delay(500);
+    if (DHT11_Read_Data(&temperature, &humidity) == 0)
+    {
+        OLED_Clear();
+        // 第一行显示 LED 状态
+        if (HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin) == GPIO_PIN_RESET) {
+            OLED_ShowString(0, 0, "LED: ON ", 16);
+        } else {
+            OLED_ShowString(0, 0, "LED: OFF", 16);
+        }
+        
+        // 第二行和第三行显示温湿度
+        sprintf(buf, "Temp: %d C", temperature);
+        OLED_ShowString(0, 16, buf, 16);
+        sprintf(buf, "Humi: %d %%", humidity);
+        OLED_ShowString(0, 32, buf, 16);
+        OLED_UpdateScreen();
+    }
+    else
+    {
+        OLED_Clear();
+        OLED_ShowString(0, 0, "DHT11 Error!", 16);
+        OLED_UpdateScreen();
+    }
+
+    LED_Toggle();
+    HAL_Delay(2000); // DHT11 采样周期建议不小于 2s
   }
   /* USER CODE END 3 */
 }
