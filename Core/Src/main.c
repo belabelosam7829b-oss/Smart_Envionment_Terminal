@@ -102,7 +102,7 @@ int main(void)
   OLED_Init();
   DHT11_Init();
   LightSensor_Init();
-  OLED_ShowString(0, 0, "System Starting...", 16);
+  OLED_ShowString(0, 0, "System Starting...");
   OLED_UpdateScreen();
   /* USER CODE END 2 */
 
@@ -125,29 +125,29 @@ int main(void)
 
     // 2. 第一行：显示 LED 状态
     if (HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin) == GPIO_PIN_RESET) {
-        OLED_ShowString(0, 0, "LED: ON ", 16);
+        OLED_ShowString(0, 0, "LED: ON ");
     } else {
-        OLED_ShowString(0, 0, "LED: OFF", 16);
+        OLED_ShowString(0, 0, "LED: OFF");
     }
 
     // 3. 第二、三行：读取 DHT11
     if (DHT11_Read_Data(&temperature, &humidity) == 0)
     {
         sprintf(buf, "Temp: %d C", temperature);
-        OLED_ShowString(0, 16, buf, 16);
+        OLED_ShowString(0, 16, buf);
         sprintf(buf, "Humi: %d %%", humidity);
-        OLED_ShowString(0, 32, buf, 16);
+        OLED_ShowString(0, 32, buf);
     }
     else
     {
-        OLED_ShowString(0, 16, "Temp: Error", 16);
-        OLED_ShowString(0, 32, "Humi: Error", 16);
+        OLED_ShowString(0, 16, "Temp: Error");
+        OLED_ShowString(0, 32, "Humi: Error");
     }
 
     // 4. 第四行：显示光照强度
     light_percentage = LightSensor_GetPercentage();
     sprintf(buf, "Light: %d %%", light_percentage);
-    OLED_ShowString(0, 48, buf, 16);
+    OLED_ShowString(0, 48, buf);
 
     // 5. 统一刷新屏幕
     OLED_UpdateScreen();

@@ -46,16 +46,17 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
-    Core/Src/led.c
-    Core/Src/OLED.c
-    Core/Src/dht11.c
-    Core/Src/5516.c
+    Drivers/User/Src/led.c
+    Drivers/User/Src/OLED.c
+    Drivers/User/Src/dht11.c
+    Drivers/User/Src/5516.c
     Core/Src/adc.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
+    Drivers/User/Inc
 )
 
 # Add project symbols (macros)
