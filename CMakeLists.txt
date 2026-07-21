@@ -50,7 +50,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Drivers/User/Src/OLED.c
     Drivers/User/Src/dht11.c
     Drivers/User/Src/5516.c
+    Drivers/User/Src/Serial.c
     Core/Src/adc.c
+    Core/Src/usart.c
 )
 
 # Add include paths
