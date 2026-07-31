@@ -21,3 +21,16 @@ Makefile
 
 # STM32CubeMX files
 *.ioc
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+
+# Build artifacts
+dist/
+monitor.exe
+build/
