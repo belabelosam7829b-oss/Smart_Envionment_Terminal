@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "i2c.h"
+#include "rtc.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -99,6 +100,7 @@ int main(void)
   MX_TIM2_Init();
   MX_ADC1_Init();
   MX_USART3_UART_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim2);
   LED_Init();
@@ -134,29 +136,43 @@ int main(void)
         OLED_ShowString(0, 0, "LED: OFF");
     }
 
-    // 3. 第二、三行：读取 DHT11
-    if (DHT11_Read_Data(&temperature, &humidity) == 0)
+    // 3. 读取传感器数据
+    uint8_t dht_ok = (DHT11_Read_Data(&temperature, &humidity) == 0);
+    light_percentage = LightSensor_GetPercentage();
+
+    // 4. OLED 显示逻辑
+    if (dht_ok)
     {
-        sprintf(buf, "Temp: %d C", temperature);
+        sprintf(buf, "T: %d C", temperature);
         OLED_ShowString(0, 16, buf);
-        sprintf(buf, "Humi: %d %%", humidity);
+        sprintf(buf, "H: %d %%", humidity);
         OLED_ShowString(0, 32, buf);
     }
     else
     {
-        OLED_ShowString(0, 16, "Temp: Error");
-        OLED_ShowString(0, 32, "Humi: Error");
+        OLED_ShowString(0, 16, "T: Error");
+        OLED_ShowString(0, 32, "H: Error");
     }
 
-    // 4. 第四行：显示光照强度
-    light_percentage = LightSensor_GetPercentage();
-    sprintf(buf, "Light: %d %%", light_percentage);
+    sprintf(buf, "L: %d %%", light_percentage);
     OLED_ShowString(0, 48, buf);
 
-    // 5. 统一刷新屏幕
+    // 5. 串口发送数据 (使用真正的 RTC 时间)
+    RTC_TimeTypeDef sTime = {0};
+    RTC_DateTypeDef sDate = {0};
+    // 注意：HAL库要求必须先调用 GetTime 再调用 GetDate
+    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
+    printf("[%04d-%02d-%02d %02d:%02d:%02d] T:%dC, H:%d%%, L:%d%%\r\n", 
+           2000 + sDate.Year, sDate.Month, sDate.Date,
+           sTime.Hours, sTime.Minutes, sTime.Seconds, 
+           temperature, humidity, light_percentage);
+
+    // 6. 统一刷新屏幕
     OLED_UpdateScreen();
 
-    // 6. 延时 1 秒，使显示更稳定且易于观察
+    // 7. 延时 1 秒，使显示更稳定且易于观察
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
@@ -175,13 +191,14 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL2;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -196,12 +213,13 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV2;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_ADC;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();

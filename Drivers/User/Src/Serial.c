@@ -14,9 +14,14 @@ void Serial_Init(void)
 /**
  * @brief 发送一个字节
  */
+/**
+ * @brief 串口传输超时时间（毫秒），避免阻塞主循环
+ */
+#define SERIAL_TIMEOUT_MS 100
+
 void Serial_SendByte(uint8_t Byte)
 {
-    HAL_UART_Transmit(&huart3, &Byte, 1, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart3, &Byte, 1, SERIAL_TIMEOUT_MS);
 }
 
 /**
@@ -24,7 +29,7 @@ void Serial_SendByte(uint8_t Byte)
  */
 void Serial_SendArray(uint8_t *Array, uint16_t Length)
 {
-    HAL_UART_Transmit(&huart3, Array, Length, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart3, Array, Length, SERIAL_TIMEOUT_MS);
 }
 
 /**
@@ -34,7 +39,7 @@ void Serial_SendString(char *String)
 {
     uint16_t len = 0;
     while (String[len] != '\0') len++;
-    HAL_UART_Transmit(&huart3, (uint8_t *)String, len, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart3, (uint8_t *)String, len, SERIAL_TIMEOUT_MS);
 }
 
 /**
@@ -76,7 +81,7 @@ int fputc(int ch, FILE *f)
  */
 int _write(int file, char *ptr, int len)
 {
-    HAL_UART_Transmit(&huart3, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart3, (uint8_t *)ptr, len, SERIAL_TIMEOUT_MS);
     return len;
 }
 

@@ -53,6 +53,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Drivers/User/Src/Serial.c
     Core/Src/adc.c
     Core/Src/usart.c
+    Core/Src/rtc.c
 )
 
 # Add include paths
@@ -74,4 +75,13 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
 
     # Add user defined libraries
+)
+
+# Post-build: generate .hex and .bin files (relative paths avoid Chinese-char path issues)
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E chdir $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>
+        ${CMAKE_OBJCOPY} -O ihex ${CMAKE_PROJECT_NAME}.elf ${CMAKE_PROJECT_NAME}.hex
+    COMMAND ${CMAKE_COMMAND} -E chdir $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>
+        ${CMAKE_OBJCOPY} -O binary ${CMAKE_PROJECT_NAME}.elf ${CMAKE_PROJECT_NAME}.bin
+    COMMENT "Generating .hex and .bin files..."
 )
