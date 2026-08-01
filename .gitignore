@@ -34,3 +34,13 @@ __pycache__/
 dist/
 monitor.exe
 build/
+
+# Local test scripts & utility (not uploaded to GitHub)
+fix_kimi_config.py
+kimi_test_settings.json
+read_ccswitch_db.py
+test_kimi.json
+test_kimi_models.py
+test_kimi_stream.json
+test_kimi_tools.json
+git_push.bat
