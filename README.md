@@ -1,0 +1,2 @@
+# Smart_Envionment_Terminal
+基于STM32环境感知并通过串口上传到电脑端通过Python画实时出可视化图形，生成csv文件
